@@ -1,0 +1,13 @@
+jo      = "0.10"
+name    = "ansi"
+
+[package]
+version     = "0.1.0"
+runtime     = "pure"
+description = "ANSI terminal escape codes for styled text output"
+homepage    = "https://github.com/liufengyun/ansi"
+license     = "MIT"
+authors     = ["Fengyun Liu <fengyun.liu.cs@gmail.com>"]
+
+[test]
+src = ["tests/"]

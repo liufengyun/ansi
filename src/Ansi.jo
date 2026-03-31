@@ -1,0 +1,343 @@
+//[ ANSI terminal escape code library.
+  !
+  ! Wraps text in ANSI SGR (Select Graphic Rendition) escape sequences for
+  ! styled terminal output. All functions return plain strings — no side effects.
+  !
+  ! Example:
+  !
+  ! ```
+  ! import ansi
+  !
+  ! println (ansi.bold("hello") + " " + ansi.red("world"))
+  ! println (ansi.style("error", [ansi.Code.bold, ansi.Code.red]))
+  ! ```
+  !
+  ! Styles are composable by nesting:
+  !
+  ! ```
+  ! println (ansi.bold(ansi.underline("title")))
+  ! ```
+  !
+  ! When the terminal does not support color, use `ansi.strip` to remove all
+  ! escape sequences from a string before output.
+//]
+namespace ansi
+
+//[ Named SGR code constants.
+  !
+  ! Use these with `ansi.apply` or `ansi.style` for precise control:
+  !
+  ! ```
+  ! ansi.apply("text", ansi.Code.bold)
+  ! ansi.style("text", [ansi.Code.bold, ansi.Code.red])
+  ! ```
+//]
+section Code
+
+  // ---- Reset ----------------------------------------------------------------
+
+  //[ Reset all attributes to terminal default.   //]
+  def reset: Int = 0
+
+  // ---- Text styles ----------------------------------------------------------
+
+  //[ Bold / increased intensity.   //]
+  def bold: Int = 1
+
+  //[ Dim / decreased intensity (not widely supported).   //]
+  def dim: Int = 2
+
+  //[ Italic (not widely supported).   //]
+  def italic: Int = 3
+
+  //[ Underline.   //]
+  def underline: Int = 4
+
+  //[ Blinking text (not widely supported).   //]
+  def blink: Int = 5
+
+  //[ Swap foreground and background colors.   //]
+  def inverse: Int = 7
+
+  //[ Hidden / invisible text.   //]
+  def hidden: Int = 8
+
+  //[ Strikethrough (not widely supported).   //]
+  def strikethrough: Int = 9
+
+  // ---- Standard foreground colors (30–37) -----------------------------------
+
+  //[ Black foreground.   //]
+  def black: Int = 30
+
+  //[ Red foreground.   //]
+  def red: Int = 31
+
+  //[ Green foreground.   //]
+  def green: Int = 32
+
+  //[ Yellow foreground.   //]
+  def yellow: Int = 33
+
+  //[ Blue foreground.   //]
+  def blue: Int = 34
+
+  //[ Magenta foreground.   //]
+  def magenta: Int = 35
+
+  //[ Cyan foreground.   //]
+  def cyan: Int = 36
+
+  //[ White foreground.   //]
+  def white: Int = 37
+
+  // ---- Standard background colors (40–47) -----------------------------------
+
+  //[ Black background.   //]
+  def bgBlack: Int = 40
+
+  //[ Red background.   //]
+  def bgRed: Int = 41
+
+  //[ Green background.   //]
+  def bgGreen: Int = 42
+
+  //[ Yellow background.   //]
+  def bgYellow: Int = 43
+
+  //[ Blue background.   //]
+  def bgBlue: Int = 44
+
+  //[ Magenta background.   //]
+  def bgMagenta: Int = 45
+
+  //[ Cyan background.   //]
+  def bgCyan: Int = 46
+
+  //[ White background.   //]
+  def bgWhite: Int = 47
+
+  // ---- Bright foreground colors (90–97) ------------------------------------
+
+  //[ Bright black (dark grey) foreground.   //]
+  def brightBlack: Int = 90
+
+  //[ Bright red foreground.   //]
+  def brightRed: Int = 91
+
+  //[ Bright green foreground.   //]
+  def brightGreen: Int = 92
+
+  //[ Bright yellow foreground.   //]
+  def brightYellow: Int = 93
+
+  //[ Bright blue foreground.   //]
+  def brightBlue: Int = 94
+
+  //[ Bright magenta foreground.   //]
+  def brightMagenta: Int = 95
+
+  //[ Bright cyan foreground.   //]
+  def brightCyan: Int = 96
+
+  //[ Bright white foreground.   //]
+  def brightWhite: Int = 97
+
+  // ---- Bright background colors (100–107) ----------------------------------
+
+  //[ Bright black background.   //]
+  def bgBrightBlack: Int = 100
+
+  //[ Bright red background.   //]
+  def bgBrightRed: Int = 101
+
+  //[ Bright green background.   //]
+  def bgBrightGreen: Int = 102
+
+  //[ Bright yellow background.   //]
+  def bgBrightYellow: Int = 103
+
+  //[ Bright blue background.   //]
+  def bgBrightBlue: Int = 104
+
+  //[ Bright magenta background.   //]
+  def bgBrightMagenta: Int = 105
+
+  //[ Bright cyan background.   //]
+  def bgBrightCyan: Int = 106
+
+  //[ Bright white background.   //]
+  def bgBrightWhite: Int = 107
+
+end
+
+//[ Wrap `text` with the given SGR `code`, resetting afterward.
+  !
+  ! Produces: ESC[<code>m<text>ESC[0m
+//]
+def apply(text: String, code: Int): String =
+  "\u{1B}[" + code.toString + "m" + text + "\u{1B}[0m"
+
+//[ Wrap `text` with multiple SGR codes applied left-to-right, resetting afterward.
+  !
+  ! Produces: ESC[<c1>;<c2>;...m<text>ESC[0m
+  !
+  ! Example: `ansi.style("text", [ansi.Code.bold, ansi.Code.red])`
+//]
+def style(text: String, codes: List[Int]): String =
+  if codes.isEmpty then text
+  else
+    val params = codes.fold "" do (acc, code) =>
+      if acc.isEmpty then code.toString
+      else acc + ";" + code.toString
+    "\u{1B}[" + params + "m" + text + "\u{1B}[0m"
+
+//[ Remove all ANSI escape sequences from `text`.
+  !
+  ! Useful when writing to a file or a terminal that does not support color.
+  ! Strips sequences of the form ESC[...m.
+//]
+def strip(text: String): String =
+  val n = text.size
+  var result = ""
+  var i = 0
+  while i < n do
+    if text.get(i) == 0x1B && i + 1 < n && text.get(i + 1) == '[' then
+      // Skip ESC [ ... m
+      i = i + 2
+      while i < n && text.get(i) != 'm' do
+        i = i + 1
+      end
+      i = i + 1  // skip 'm'
+    else
+      result = result + text.get(i).toString
+      i = i + 1
+    end
+  end
+  result
+
+// ---- Text style shortcuts ---------------------------------------------------
+
+//[ Bold text.   //]
+def bold(text: String): String = apply(text, Code.bold)
+
+//[ Dim text.   //]
+def dim(text: String): String = apply(text, Code.dim)
+
+//[ Italic text.   //]
+def italic(text: String): String = apply(text, Code.italic)
+
+//[ Underlined text.   //]
+def underline(text: String): String = apply(text, Code.underline)
+
+//[ Blinking text.   //]
+def blink(text: String): String = apply(text, Code.blink)
+
+//[ Inverse (swapped foreground/background) text.   //]
+def inverse(text: String): String = apply(text, Code.inverse)
+
+//[ Hidden text.   //]
+def hidden(text: String): String = apply(text, Code.hidden)
+
+//[ Strikethrough text.   //]
+def strikethrough(text: String): String = apply(text, Code.strikethrough)
+
+// ---- Foreground color shortcuts ---------------------------------------------
+
+//[ Black foreground.   //]
+def black(text: String): String = apply(text, Code.black)
+
+//[ Red foreground.   //]
+def red(text: String): String = apply(text, Code.red)
+
+//[ Green foreground.   //]
+def green(text: String): String = apply(text, Code.green)
+
+//[ Yellow foreground.   //]
+def yellow(text: String): String = apply(text, Code.yellow)
+
+//[ Blue foreground.   //]
+def blue(text: String): String = apply(text, Code.blue)
+
+//[ Magenta foreground.   //]
+def magenta(text: String): String = apply(text, Code.magenta)
+
+//[ Cyan foreground.   //]
+def cyan(text: String): String = apply(text, Code.cyan)
+
+//[ White foreground.   //]
+def white(text: String): String = apply(text, Code.white)
+
+//[ Bright black (dark grey) foreground.   //]
+def brightBlack(text: String): String = apply(text, Code.brightBlack)
+
+//[ Bright red foreground.   //]
+def brightRed(text: String): String = apply(text, Code.brightRed)
+
+//[ Bright green foreground.   //]
+def brightGreen(text: String): String = apply(text, Code.brightGreen)
+
+//[ Bright yellow foreground.   //]
+def brightYellow(text: String): String = apply(text, Code.brightYellow)
+
+//[ Bright blue foreground.   //]
+def brightBlue(text: String): String = apply(text, Code.brightBlue)
+
+//[ Bright magenta foreground.   //]
+def brightMagenta(text: String): String = apply(text, Code.brightMagenta)
+
+//[ Bright cyan foreground.   //]
+def brightCyan(text: String): String = apply(text, Code.brightCyan)
+
+//[ Bright white foreground.   //]
+def brightWhite(text: String): String = apply(text, Code.brightWhite)
+
+// ---- Background color shortcuts ---------------------------------------------
+
+//[ Black background.   //]
+def bgBlack(text: String): String = apply(text, Code.bgBlack)
+
+//[ Red background.   //]
+def bgRed(text: String): String = apply(text, Code.bgRed)
+
+//[ Green background.   //]
+def bgGreen(text: String): String = apply(text, Code.bgGreen)
+
+//[ Yellow background.   //]
+def bgYellow(text: String): String = apply(text, Code.bgYellow)
+
+//[ Blue background.   //]
+def bgBlue(text: String): String = apply(text, Code.bgBlue)
+
+//[ Magenta background.   //]
+def bgMagenta(text: String): String = apply(text, Code.bgMagenta)
+
+//[ Cyan background.   //]
+def bgCyan(text: String): String = apply(text, Code.bgCyan)
+
+//[ White background.   //]
+def bgWhite(text: String): String = apply(text, Code.bgWhite)
+
+//[ Bright black background.   //]
+def bgBrightBlack(text: String): String = apply(text, Code.bgBrightBlack)
+
+//[ Bright red background.   //]
+def bgBrightRed(text: String): String = apply(text, Code.bgBrightRed)
+
+//[ Bright green background.   //]
+def bgBrightGreen(text: String): String = apply(text, Code.bgBrightGreen)
+
+//[ Bright yellow background.   //]
+def bgBrightYellow(text: String): String = apply(text, Code.bgBrightYellow)
+
+//[ Bright blue background.   //]
+def bgBrightBlue(text: String): String = apply(text, Code.bgBrightBlue)
+
+//[ Bright magenta background.   //]
+def bgBrightMagenta(text: String): String = apply(text, Code.bgBrightMagenta)
+
+//[ Bright cyan background.   //]
+def bgBrightCyan(text: String): String = apply(text, Code.bgBrightCyan)
+
+//[ Bright white background.   //]
+def bgBrightWhite(text: String): String = apply(text, Code.bgBrightWhite)

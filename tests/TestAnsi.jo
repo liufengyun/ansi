@@ -1,0 +1,132 @@
+import ansi
+
+// Helper: assert two strings are equal, print pass/fail
+def check(label: String, actual: String, expected: String): Unit =
+  if actual == expected then
+    println("[PASS] " + label)
+  else
+    println("[FAIL] " + label)
+    println("  expected: " + expected)
+    println("  actual:   " + actual)
+
+def esc: String = "\u{1B}"
+
+def main =
+  // ---- apply ----------------------------------------------------------------
+
+  check("apply bold",
+    ansi.apply("hi", ansi.Code.bold),
+    esc + "[1mhi" + esc + "[0m")
+
+  check("apply red",
+    ansi.apply("hi", ansi.Code.red),
+    esc + "[31mhi" + esc + "[0m")
+
+  check("apply reset code 0",
+    ansi.apply("x", ansi.Code.reset),
+    esc + "[0mx" + esc + "[0m")
+
+  // ---- style (multiple codes) -----------------------------------------------
+
+  check("style empty codes returns text unchanged",
+    ansi.style("hi", List.empty),
+    "hi")
+
+  check("style single code",
+    ansi.style("hi", [ansi.Code.bold]),
+    esc + "[1mhi" + esc + "[0m")
+
+  check("style two codes",
+    ansi.style("hi", [ansi.Code.bold, ansi.Code.red]),
+    esc + "[1;31mhi" + esc + "[0m")
+
+  check("style three codes",
+    ansi.style("x", [ansi.Code.bold, ansi.Code.underline, ansi.Code.green]),
+    esc + "[1;4;32mx" + esc + "[0m")
+
+  // ---- strip ----------------------------------------------------------------
+
+  check("strip plain string unchanged",
+    ansi.strip("hello"),
+    "hello")
+
+  check("strip single sequence",
+    ansi.strip(ansi.bold("hello")),
+    "hello")
+
+  check("strip multiple sequences",
+    ansi.strip(ansi.bold("hello") + " " + ansi.red("world")),
+    "hello world")
+
+  check("strip nested sequences",
+    ansi.strip(ansi.bold(ansi.underline("title"))),
+    "title")
+
+  check("strip empty string",
+    ansi.strip(""),
+    "")
+
+  check("strip preserves text between sequences",
+    ansi.strip("a" + ansi.red("b") + "c"),
+    "abc")
+
+  // ---- text style shortcuts -------------------------------------------------
+
+  check("bold",          ansi.bold("x"),          esc + "[1mx"  + esc + "[0m")
+  check("dim",           ansi.dim("x"),           esc + "[2mx"  + esc + "[0m")
+  check("italic",        ansi.italic("x"),        esc + "[3mx"  + esc + "[0m")
+  check("underline",     ansi.underline("x"),     esc + "[4mx"  + esc + "[0m")
+  check("blink",         ansi.blink("x"),         esc + "[5mx"  + esc + "[0m")
+  check("inverse",       ansi.inverse("x"),       esc + "[7mx"  + esc + "[0m")
+  check("hidden",        ansi.hidden("x"),        esc + "[8mx"  + esc + "[0m")
+  check("strikethrough", ansi.strikethrough("x"), esc + "[9mx"  + esc + "[0m")
+
+  // ---- foreground color shortcuts -------------------------------------------
+
+  check("black",         ansi.black("x"),         esc + "[30mx" + esc + "[0m")
+  check("red",           ansi.red("x"),           esc + "[31mx" + esc + "[0m")
+  check("green",         ansi.green("x"),         esc + "[32mx" + esc + "[0m")
+  check("yellow",        ansi.yellow("x"),        esc + "[33mx" + esc + "[0m")
+  check("blue",          ansi.blue("x"),          esc + "[34mx" + esc + "[0m")
+  check("magenta",       ansi.magenta("x"),       esc + "[35mx" + esc + "[0m")
+  check("cyan",          ansi.cyan("x"),          esc + "[36mx" + esc + "[0m")
+  check("white",         ansi.white("x"),         esc + "[37mx" + esc + "[0m")
+
+  check("brightBlack",   ansi.brightBlack("x"),   esc + "[90mx" + esc + "[0m")
+  check("brightRed",     ansi.brightRed("x"),     esc + "[91mx" + esc + "[0m")
+  check("brightGreen",   ansi.brightGreen("x"),   esc + "[92mx" + esc + "[0m")
+  check("brightYellow",  ansi.brightYellow("x"),  esc + "[93mx" + esc + "[0m")
+  check("brightBlue",    ansi.brightBlue("x"),    esc + "[94mx" + esc + "[0m")
+  check("brightMagenta", ansi.brightMagenta("x"), esc + "[95mx" + esc + "[0m")
+  check("brightCyan",    ansi.brightCyan("x"),    esc + "[96mx" + esc + "[0m")
+  check("brightWhite",   ansi.brightWhite("x"),   esc + "[97mx" + esc + "[0m")
+
+  // ---- background color shortcuts -------------------------------------------
+
+  check("bgBlack",         ansi.bgBlack("x"),         esc + "[40mx"  + esc + "[0m")
+  check("bgRed",           ansi.bgRed("x"),           esc + "[41mx"  + esc + "[0m")
+  check("bgGreen",         ansi.bgGreen("x"),         esc + "[42mx"  + esc + "[0m")
+  check("bgYellow",        ansi.bgYellow("x"),        esc + "[43mx"  + esc + "[0m")
+  check("bgBlue",          ansi.bgBlue("x"),          esc + "[44mx"  + esc + "[0m")
+  check("bgMagenta",       ansi.bgMagenta("x"),       esc + "[45mx"  + esc + "[0m")
+  check("bgCyan",          ansi.bgCyan("x"),          esc + "[46mx"  + esc + "[0m")
+  check("bgWhite",         ansi.bgWhite("x"),         esc + "[47mx"  + esc + "[0m")
+
+  check("bgBrightBlack",   ansi.bgBrightBlack("x"),   esc + "[100mx" + esc + "[0m")
+  check("bgBrightRed",     ansi.bgBrightRed("x"),     esc + "[101mx" + esc + "[0m")
+  check("bgBrightGreen",   ansi.bgBrightGreen("x"),   esc + "[102mx" + esc + "[0m")
+  check("bgBrightYellow",  ansi.bgBrightYellow("x"),  esc + "[103mx" + esc + "[0m")
+  check("bgBrightBlue",    ansi.bgBrightBlue("x"),    esc + "[104mx" + esc + "[0m")
+  check("bgBrightMagenta", ansi.bgBrightMagenta("x"), esc + "[105mx" + esc + "[0m")
+  check("bgBrightCyan",    ansi.bgBrightCyan("x"),    esc + "[106mx" + esc + "[0m")
+  check("bgBrightWhite",   ansi.bgBrightWhite("x"),   esc + "[107mx" + esc + "[0m")
+
+  // ---- composability --------------------------------------------------------
+
+  check("strip recovers original from style",
+    ansi.strip(ansi.style("hello world", [ansi.Code.bold, ansi.Code.bgBlue, ansi.Code.brightYellow])),
+    "hello world")
+
+  check("strip recovers original from nested shortcuts",
+    ansi.strip(ansi.bold(ansi.bgRed(ansi.underline("hello world")))),
+    "hello world")
