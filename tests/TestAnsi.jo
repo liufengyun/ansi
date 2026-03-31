@@ -1,13 +1,25 @@
 import ansi
 
-// Helper: assert two strings are equal, print pass/fail
+def passTag: String =
+  ansi.style("[PASS]", [ansi.Code.bold, ansi.Code.green])
+
+def failTag: String =
+  ansi.style("[FAIL]", [ansi.Code.bold, ansi.Code.red])
+
+def expectedTag: String =
+  ansi.style("expected:", [ansi.Code.bold, ansi.Code.cyan])
+
+def actualTag: String =
+  ansi.style("actual:  ", [ansi.Code.bold, ansi.Code.yellow])
+
+// Helper: assert two strings are equal, print colored pass/fail output
 def check(label: String, actual: String, expected: String): Unit =
   if actual == expected then
-    println("[PASS] " + label)
+    println(passTag + " " + label)
   else
-    println("[FAIL] " + label)
-    println("  expected: " + expected)
-    println("  actual:   " + actual)
+    println(failTag + " " + ansi.bold(label))
+    println("  " + expectedTag + " " + expected)
+    println("  " + actualTag + " " + actual)
 
 def esc: String = "\u{1B}"
 
