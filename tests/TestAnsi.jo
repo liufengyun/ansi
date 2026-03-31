@@ -26,61 +26,74 @@ def esc: String = "\u{1B}"
 def main =
   // ---- apply ----------------------------------------------------------------
 
-  check("apply bold",
-    ansi.apply("hi", ansi.Code.bold),
-    esc + "[1mhi" + esc + "[0m")
+  check
+    "apply bold"
+    ansi.apply("hi", ansi.Code.bold)
+    esc + "[1mhi" + esc + "[0m"
 
-  check("apply red",
-    ansi.apply("hi", ansi.Code.red),
-    esc + "[31mhi" + esc + "[0m")
+  check
+    "apply red"
+    ansi.apply("hi", ansi.Code.red)
+    esc + "[31mhi" + esc + "[0m"
 
-  check("apply reset code 0",
-    ansi.apply("x", ansi.Code.reset),
-    esc + "[0mx" + esc + "[0m")
+  check
+    "apply reset code 0"
+    ansi.apply("x", ansi.Code.reset)
+    esc + "[0mx" + esc + "[0m"
 
   // ---- style (multiple codes) -----------------------------------------------
 
-  check("style empty codes returns text unchanged",
-    ansi.style("hi", List.empty),
-    "hi")
+  check
+    "style empty codes returns text unchanged"
+    ansi.style("hi", List.empty)
+    "hi"
 
-  check("style single code",
-    ansi.style("hi", [ansi.Code.bold]),
-    esc + "[1mhi" + esc + "[0m")
+  check
+    "style single code"
+    ansi.style("hi", [ansi.Code.bold])
+    esc + "[1mhi" + esc + "[0m"
 
-  check("style two codes",
-    ansi.style("hi", [ansi.Code.bold, ansi.Code.red]),
-    esc + "[1;31mhi" + esc + "[0m")
+  check
+    "style two codes"
+    ansi.style("hi", [ansi.Code.bold, ansi.Code.red])
+    esc + "[1;31mhi" + esc + "[0m"
 
-  check("style three codes",
-    ansi.style("x", [ansi.Code.bold, ansi.Code.underline, ansi.Code.green]),
-    esc + "[1;4;32mx" + esc + "[0m")
+  check
+    "style three codes"
+    ansi.style("x", [ansi.Code.bold, ansi.Code.underline, ansi.Code.green])
+    esc + "[1;4;32mx" + esc + "[0m"
 
   // ---- strip ----------------------------------------------------------------
 
-  check("strip plain string unchanged",
-    ansi.strip("hello"),
-    "hello")
+  check
+    "strip plain string unchanged"
+    ansi.strip("hello")
+    "hello"
 
-  check("strip single sequence",
-    ansi.strip(ansi.bold("hello")),
-    "hello")
+  check
+    "strip single sequence"
+    ansi.strip(ansi.bold("hello"))
+    "hello"
 
-  check("strip multiple sequences",
-    ansi.strip(ansi.bold("hello") + " " + ansi.red("world")),
-    "hello world")
+  check
+    "strip multiple sequences"
+    ansi.strip(ansi.bold("hello") + " " + ansi.red("world"))
+    "hello world"
 
-  check("strip nested sequences",
-    ansi.strip(ansi.bold(ansi.underline("title"))),
-    "title")
+  check
+    "strip nested sequences"
+    ansi.strip(ansi.bold(ansi.underline("title")))
+    "title"
 
-  check("strip empty string",
-    ansi.strip(""),
-    "")
+  check
+    "strip empty string"
+    ansi.strip("")
+    ""
 
-  check("strip preserves text between sequences",
-    ansi.strip("a" + ansi.red("b") + "c"),
-    "abc")
+  check
+    "strip preserves text between sequences"
+    ansi.strip("a" + ansi.red("b") + "c")
+    "abc"
 
   // ---- text style shortcuts -------------------------------------------------
 
@@ -135,10 +148,12 @@ def main =
 
   // ---- composability --------------------------------------------------------
 
-  check("strip recovers original from style",
-    ansi.strip(ansi.style("hello world", [ansi.Code.bold, ansi.Code.bgBlue, ansi.Code.brightYellow])),
-    "hello world")
+  check
+    "strip recovers original from style"
+    ansi.strip(ansi.style("hello world", [ansi.Code.bold, ansi.Code.bgBlue, ansi.Code.brightYellow]))
+    "hello world"
 
-  check("strip recovers original from nested shortcuts",
-    ansi.strip(ansi.bold(ansi.bgRed(ansi.underline("hello world")))),
-    "hello world")
+  check
+    "strip recovers original from nested shortcuts"
+    ansi.strip(ansi.bold(ansi.bgRed(ansi.underline("hello world"))))
+    "hello world"
