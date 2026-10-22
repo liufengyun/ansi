@@ -35,7 +35,7 @@ jobs:
           tar -xzf jo-0.14.2.tar.gz
           echo "$RUNNER_TEMP/jo-0.14.2/bin" >> "$GITHUB_PATH"
       - name: Run jtest suite
-        run: jo test
+        run: jo run test
       - name: Build release artifacts
         run: jo package
       - name: Upload release artifacts

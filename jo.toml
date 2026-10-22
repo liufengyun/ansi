@@ -21,6 +21,3 @@ depth = 2
 src = ["tests/"]
 modules = ["ansi"]
 packages = [{ name = "jtest-python", version = "0.2" }]
-
-[commands]
-test = "jo run test"

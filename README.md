@@ -60,15 +60,14 @@ Python 3.12 or later. Select the compiler used by CI:
 jo versions install 0.14.2
 jo versions use 0.14.2
 jo lock
-jo test
+jo run test
 ```
 
-`jo test` runs all 55 tests with [jtest](https://github.com/typescope/jtest)
-and exits unsuccessfully if a test fails. You can also run or filter the test
-module directly:
+`jo run test` runs all 55 tests with [jtest](https://github.com/typescope/jtest)
+and exits unsuccessfully if a test fails. Select a suite by passing its path
+prefix:
 
 ```sh
-jo run test
 jo run test -- strip
 ```
 
