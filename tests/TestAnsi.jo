@@ -1,159 +1,228 @@
 import ansi
+import jo.IO.stdout
+import jo.IO.args
+import jtest.*
 
-def passTag: String =
-  ansi.style("[PASS]", [ansi.Code.bold, ansi.Code.green])
+private def esc: String = "\u{1B}"
 
-def failTag: String =
-  ansi.style("[FAIL]", [ansi.Code.bold, ansi.Code.red])
+def main(): Unit receives stdout, args =
+  val root = Testing.define("ansi", () => suites())
+  Runner.runWithArgs(root)
 
-def expectedTag: String =
-  ansi.style("expected:", [ansi.Code.bold, ansi.Code.cyan])
+private def suites(): Unit receives thisSuite =
+  suite: "apply", () =>
+    test: "apply bold", () =>
+      checkEquals:
+        "apply bold"
+        ansi.apply("hi", ansi.Code.bold)
+        esc + "[1mhi" + esc + "[0m"
 
-def actualTag: String =
-  ansi.style("actual:  ", [ansi.Code.bold, ansi.Code.yellow])
+    test: "apply red", () =>
+      checkEquals:
+        "apply red"
+        ansi.apply("hi", ansi.Code.red)
+        esc + "[31mhi" + esc + "[0m"
 
-// Helper: assert two strings are equal, print colored pass/fail output
-def check(label: String, actual: String, expected: String): Unit =
-  if actual == expected then
-    println(passTag + " " + label)
-  else
-    println(failTag + " " + ansi.bold(label))
-    println("  " + expectedTag + " " + expected)
-    println("  " + actualTag + " " + actual)
+    test: "apply reset code 0", () =>
+      checkEquals:
+        "apply reset code 0"
+        ansi.apply("x", ansi.Code.reset)
+        esc + "[0mx" + esc + "[0m"
 
-def esc: String = "\u{1B}"
+  suite: "style (multiple codes)", () =>
+    test: "style empty codes returns text unchanged", () =>
+      checkEquals:
+        "style empty codes returns text unchanged"
+        ansi.style("hi", List.empty)
+        "hi"
 
-def main =
-  // ---- apply ----------------------------------------------------------------
+    test: "style single code", () =>
+      checkEquals:
+        "style single code"
+        ansi.style("hi", [ansi.Code.bold])
+        esc + "[1mhi" + esc + "[0m"
 
-  check
-    "apply bold"
-    ansi.apply("hi", ansi.Code.bold)
-    esc + "[1mhi" + esc + "[0m"
+    test: "style two codes", () =>
+      checkEquals:
+        "style two codes"
+        ansi.style("hi", [ansi.Code.bold, ansi.Code.red])
+        esc + "[1;31mhi" + esc + "[0m"
 
-  check
-    "apply red"
-    ansi.apply("hi", ansi.Code.red)
-    esc + "[31mhi" + esc + "[0m"
+    test: "style three codes", () =>
+      checkEquals:
+        "style three codes"
+        ansi.style("x", [ansi.Code.bold, ansi.Code.underline, ansi.Code.green])
+        esc + "[1;4;32mx" + esc + "[0m"
 
-  check
-    "apply reset code 0"
-    ansi.apply("x", ansi.Code.reset)
-    esc + "[0mx" + esc + "[0m"
+  suite: "strip", () =>
+    test: "strip plain string unchanged", () =>
+      checkEquals:
+        "strip plain string unchanged"
+        ansi.strip("hello")
+        "hello"
 
-  // ---- style (multiple codes) -----------------------------------------------
+    test: "strip single sequence", () =>
+      checkEquals:
+        "strip single sequence"
+        ansi.strip(ansi.bold("hello"))
+        "hello"
 
-  check
-    "style empty codes returns text unchanged"
-    ansi.style("hi", List.empty)
-    "hi"
+    test: "strip multiple sequences", () =>
+      checkEquals:
+        "strip multiple sequences"
+        ansi.strip(ansi.bold("hello") + " " + ansi.red("world"))
+        "hello world"
 
-  check
-    "style single code"
-    ansi.style("hi", [ansi.Code.bold])
-    esc + "[1mhi" + esc + "[0m"
+    test: "strip nested sequences", () =>
+      checkEquals:
+        "strip nested sequences"
+        ansi.strip(ansi.bold(ansi.underline("title")))
+        "title"
 
-  check
-    "style two codes"
-    ansi.style("hi", [ansi.Code.bold, ansi.Code.red])
-    esc + "[1;31mhi" + esc + "[0m"
+    test: "strip empty string", () =>
+      checkEquals:
+        "strip empty string"
+        ansi.strip("")
+        ""
 
-  check
-    "style three codes"
-    ansi.style("x", [ansi.Code.bold, ansi.Code.underline, ansi.Code.green])
-    esc + "[1;4;32mx" + esc + "[0m"
+    test: "strip preserves text between sequences", () =>
+      checkEquals:
+        "strip preserves text between sequences"
+        ansi.strip("a" + ansi.red("b") + "c")
+        "abc"
 
-  // ---- strip ----------------------------------------------------------------
+  suite: "text style shortcuts", () =>
+    test: "bold", () =>
+      checkEquals("bold", ansi.bold("x"),          esc + "[1mx"  + esc + "[0m")
 
-  check
-    "strip plain string unchanged"
-    ansi.strip("hello")
-    "hello"
+    test: "dim", () =>
+      checkEquals("dim", ansi.dim("x"),           esc + "[2mx"  + esc + "[0m")
 
-  check
-    "strip single sequence"
-    ansi.strip(ansi.bold("hello"))
-    "hello"
+    test: "italic", () =>
+      checkEquals("italic", ansi.italic("x"),        esc + "[3mx"  + esc + "[0m")
 
-  check
-    "strip multiple sequences"
-    ansi.strip(ansi.bold("hello") + " " + ansi.red("world"))
-    "hello world"
+    test: "underline", () =>
+      checkEquals("underline", ansi.underline("x"),     esc + "[4mx"  + esc + "[0m")
 
-  check
-    "strip nested sequences"
-    ansi.strip(ansi.bold(ansi.underline("title")))
-    "title"
+    test: "blink", () =>
+      checkEquals("blink", ansi.blink("x"),         esc + "[5mx"  + esc + "[0m")
 
-  check
-    "strip empty string"
-    ansi.strip("")
-    ""
+    test: "inverse", () =>
+      checkEquals("inverse", ansi.inverse("x"),       esc + "[7mx"  + esc + "[0m")
 
-  check
-    "strip preserves text between sequences"
-    ansi.strip("a" + ansi.red("b") + "c")
-    "abc"
+    test: "hidden", () =>
+      checkEquals("hidden", ansi.hidden("x"),        esc + "[8mx"  + esc + "[0m")
 
-  // ---- text style shortcuts -------------------------------------------------
+    test: "strikethrough", () =>
+      checkEquals("strikethrough", ansi.strikethrough("x"), esc + "[9mx"  + esc + "[0m")
 
-  check("bold",          ansi.bold("x"),          esc + "[1mx"  + esc + "[0m")
-  check("dim",           ansi.dim("x"),           esc + "[2mx"  + esc + "[0m")
-  check("italic",        ansi.italic("x"),        esc + "[3mx"  + esc + "[0m")
-  check("underline",     ansi.underline("x"),     esc + "[4mx"  + esc + "[0m")
-  check("blink",         ansi.blink("x"),         esc + "[5mx"  + esc + "[0m")
-  check("inverse",       ansi.inverse("x"),       esc + "[7mx"  + esc + "[0m")
-  check("hidden",        ansi.hidden("x"),        esc + "[8mx"  + esc + "[0m")
-  check("strikethrough", ansi.strikethrough("x"), esc + "[9mx"  + esc + "[0m")
+  suite: "foreground color shortcuts", () =>
+    test: "black", () =>
+      checkEquals("black", ansi.black("x"),         esc + "[30mx" + esc + "[0m")
 
-  // ---- foreground color shortcuts -------------------------------------------
+    test: "red", () =>
+      checkEquals("red", ansi.red("x"),           esc + "[31mx" + esc + "[0m")
 
-  check("black",         ansi.black("x"),         esc + "[30mx" + esc + "[0m")
-  check("red",           ansi.red("x"),           esc + "[31mx" + esc + "[0m")
-  check("green",         ansi.green("x"),         esc + "[32mx" + esc + "[0m")
-  check("yellow",        ansi.yellow("x"),        esc + "[33mx" + esc + "[0m")
-  check("blue",          ansi.blue("x"),          esc + "[34mx" + esc + "[0m")
-  check("magenta",       ansi.magenta("x"),       esc + "[35mx" + esc + "[0m")
-  check("cyan",          ansi.cyan("x"),          esc + "[36mx" + esc + "[0m")
-  check("white",         ansi.white("x"),         esc + "[37mx" + esc + "[0m")
+    test: "green", () =>
+      checkEquals("green", ansi.green("x"),         esc + "[32mx" + esc + "[0m")
 
-  check("brightBlack",   ansi.brightBlack("x"),   esc + "[90mx" + esc + "[0m")
-  check("brightRed",     ansi.brightRed("x"),     esc + "[91mx" + esc + "[0m")
-  check("brightGreen",   ansi.brightGreen("x"),   esc + "[92mx" + esc + "[0m")
-  check("brightYellow",  ansi.brightYellow("x"),  esc + "[93mx" + esc + "[0m")
-  check("brightBlue",    ansi.brightBlue("x"),    esc + "[94mx" + esc + "[0m")
-  check("brightMagenta", ansi.brightMagenta("x"), esc + "[95mx" + esc + "[0m")
-  check("brightCyan",    ansi.brightCyan("x"),    esc + "[96mx" + esc + "[0m")
-  check("brightWhite",   ansi.brightWhite("x"),   esc + "[97mx" + esc + "[0m")
+    test: "yellow", () =>
+      checkEquals("yellow", ansi.yellow("x"),        esc + "[33mx" + esc + "[0m")
 
-  // ---- background color shortcuts -------------------------------------------
+    test: "blue", () =>
+      checkEquals("blue", ansi.blue("x"),          esc + "[34mx" + esc + "[0m")
 
-  check("bgBlack",         ansi.bgBlack("x"),         esc + "[40mx"  + esc + "[0m")
-  check("bgRed",           ansi.bgRed("x"),           esc + "[41mx"  + esc + "[0m")
-  check("bgGreen",         ansi.bgGreen("x"),         esc + "[42mx"  + esc + "[0m")
-  check("bgYellow",        ansi.bgYellow("x"),        esc + "[43mx"  + esc + "[0m")
-  check("bgBlue",          ansi.bgBlue("x"),          esc + "[44mx"  + esc + "[0m")
-  check("bgMagenta",       ansi.bgMagenta("x"),       esc + "[45mx"  + esc + "[0m")
-  check("bgCyan",          ansi.bgCyan("x"),          esc + "[46mx"  + esc + "[0m")
-  check("bgWhite",         ansi.bgWhite("x"),         esc + "[47mx"  + esc + "[0m")
+    test: "magenta", () =>
+      checkEquals("magenta", ansi.magenta("x"),       esc + "[35mx" + esc + "[0m")
 
-  check("bgBrightBlack",   ansi.bgBrightBlack("x"),   esc + "[100mx" + esc + "[0m")
-  check("bgBrightRed",     ansi.bgBrightRed("x"),     esc + "[101mx" + esc + "[0m")
-  check("bgBrightGreen",   ansi.bgBrightGreen("x"),   esc + "[102mx" + esc + "[0m")
-  check("bgBrightYellow",  ansi.bgBrightYellow("x"),  esc + "[103mx" + esc + "[0m")
-  check("bgBrightBlue",    ansi.bgBrightBlue("x"),    esc + "[104mx" + esc + "[0m")
-  check("bgBrightMagenta", ansi.bgBrightMagenta("x"), esc + "[105mx" + esc + "[0m")
-  check("bgBrightCyan",    ansi.bgBrightCyan("x"),    esc + "[106mx" + esc + "[0m")
-  check("bgBrightWhite",   ansi.bgBrightWhite("x"),   esc + "[107mx" + esc + "[0m")
+    test: "cyan", () =>
+      checkEquals("cyan", ansi.cyan("x"),          esc + "[36mx" + esc + "[0m")
 
-  // ---- composability --------------------------------------------------------
+    test: "white", () =>
+      checkEquals("white", ansi.white("x"),         esc + "[37mx" + esc + "[0m")
 
-  check
-    "strip recovers original from style"
-    ansi.strip(ansi.style("hello world", [ansi.Code.bold, ansi.Code.bgBlue, ansi.Code.brightYellow]))
-    "hello world"
+    test: "brightBlack", () =>
+      checkEquals("brightBlack", ansi.brightBlack("x"),   esc + "[90mx" + esc + "[0m")
 
-  check
-    "strip recovers original from nested shortcuts"
-    ansi.strip(ansi.bold(ansi.bgRed(ansi.underline("hello world"))))
-    "hello world"
+    test: "brightRed", () =>
+      checkEquals("brightRed", ansi.brightRed("x"),     esc + "[91mx" + esc + "[0m")
+
+    test: "brightGreen", () =>
+      checkEquals("brightGreen", ansi.brightGreen("x"),   esc + "[92mx" + esc + "[0m")
+
+    test: "brightYellow", () =>
+      checkEquals("brightYellow", ansi.brightYellow("x"),  esc + "[93mx" + esc + "[0m")
+
+    test: "brightBlue", () =>
+      checkEquals("brightBlue", ansi.brightBlue("x"),    esc + "[94mx" + esc + "[0m")
+
+    test: "brightMagenta", () =>
+      checkEquals("brightMagenta", ansi.brightMagenta("x"), esc + "[95mx" + esc + "[0m")
+
+    test: "brightCyan", () =>
+      checkEquals("brightCyan", ansi.brightCyan("x"),    esc + "[96mx" + esc + "[0m")
+
+    test: "brightWhite", () =>
+      checkEquals("brightWhite", ansi.brightWhite("x"),   esc + "[97mx" + esc + "[0m")
+
+  suite: "background color shortcuts", () =>
+    test: "bgBlack", () =>
+      checkEquals("bgBlack", ansi.bgBlack("x"),         esc + "[40mx"  + esc + "[0m")
+
+    test: "bgRed", () =>
+      checkEquals("bgRed", ansi.bgRed("x"),           esc + "[41mx"  + esc + "[0m")
+
+    test: "bgGreen", () =>
+      checkEquals("bgGreen", ansi.bgGreen("x"),         esc + "[42mx"  + esc + "[0m")
+
+    test: "bgYellow", () =>
+      checkEquals("bgYellow", ansi.bgYellow("x"),        esc + "[43mx"  + esc + "[0m")
+
+    test: "bgBlue", () =>
+      checkEquals("bgBlue", ansi.bgBlue("x"),          esc + "[44mx"  + esc + "[0m")
+
+    test: "bgMagenta", () =>
+      checkEquals("bgMagenta", ansi.bgMagenta("x"),       esc + "[45mx"  + esc + "[0m")
+
+    test: "bgCyan", () =>
+      checkEquals("bgCyan", ansi.bgCyan("x"),          esc + "[46mx"  + esc + "[0m")
+
+    test: "bgWhite", () =>
+      checkEquals("bgWhite", ansi.bgWhite("x"),         esc + "[47mx"  + esc + "[0m")
+
+    test: "bgBrightBlack", () =>
+      checkEquals("bgBrightBlack", ansi.bgBrightBlack("x"),   esc + "[100mx" + esc + "[0m")
+
+    test: "bgBrightRed", () =>
+      checkEquals("bgBrightRed", ansi.bgBrightRed("x"),     esc + "[101mx" + esc + "[0m")
+
+    test: "bgBrightGreen", () =>
+      checkEquals("bgBrightGreen", ansi.bgBrightGreen("x"),   esc + "[102mx" + esc + "[0m")
+
+    test: "bgBrightYellow", () =>
+      checkEquals("bgBrightYellow", ansi.bgBrightYellow("x"),  esc + "[103mx" + esc + "[0m")
+
+    test: "bgBrightBlue", () =>
+      checkEquals("bgBrightBlue", ansi.bgBrightBlue("x"),    esc + "[104mx" + esc + "[0m")
+
+    test: "bgBrightMagenta", () =>
+      checkEquals("bgBrightMagenta", ansi.bgBrightMagenta("x"), esc + "[105mx" + esc + "[0m")
+
+    test: "bgBrightCyan", () =>
+      checkEquals("bgBrightCyan", ansi.bgBrightCyan("x"),    esc + "[106mx" + esc + "[0m")
+
+    test: "bgBrightWhite", () =>
+      checkEquals("bgBrightWhite", ansi.bgBrightWhite("x"),   esc + "[107mx" + esc + "[0m")
+
+  suite: "composability", () =>
+    test: "strip recovers original from style", () =>
+      checkEquals:
+        "strip recovers original from style"
+        ansi.strip(ansi.style("hello world", [ansi.Code.bold, ansi.Code.bgBlue, ansi.Code.brightYellow]))
+        "hello world"
+
+    test: "strip recovers original from nested shortcuts", () =>
+      checkEquals:
+        "strip recovers original from nested shortcuts"
+        ansi.strip(ansi.bold(ansi.bgRed(ansi.underline("hello world"))))
+        "hello world"

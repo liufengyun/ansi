@@ -1,13 +1,26 @@
-jo      = "0.10"
-name    = "ansi"
+jo = "0.14"
 
-[package]
-version     = "0.1.0"
-runtime     = "pure"
+[module.ansi]
+kind = "lib"
+platform = "pure"
+src = ["src/"]
+
+[module.ansi.package]
+name        = "ansi"
+version     = "0.1.1"
 description = "ANSI terminal escape codes for styled text output"
 homepage    = "https://github.com/liufengyun/ansi"
 license     = "MIT"
 authors     = ["Fengyun Liu <fengyun.liu.cs@gmail.com>"]
 
-[test]
+[module.test]
+kind = "app"
+platform = "python"
+enable-ffi = true
+depth = 2
 src = ["tests/"]
+modules = ["ansi"]
+packages = [{ name = "jtest-python", version = "0.2" }]
+
+[commands]
+test = "jo run test"

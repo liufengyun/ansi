@@ -187,7 +187,7 @@ def apply(text: String, code: Int): String =
 def style(text: String, codes: List[Int]): String =
   if codes.isEmpty then text
   else
-    val params = codes.fold "" do (acc, code) =>
+    val params = codes.fold: "", (acc, code) =>
       if acc.isEmpty then code.toString
       else acc + ";" + code.toString
     "\u{1B}[" + params + "m" + text + "\u{1B}[0m"
