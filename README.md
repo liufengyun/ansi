@@ -31,10 +31,13 @@ import ansi
 import jo.IO.stdout
 
 def main(): Unit receives stdout =
-  println(ansi.bold("hello") + " " + ansi.red("world"))
-  println(ansi.style("error", [ansi.Code.bold, ansi.Code.red]))
-  println(ansi.bold(ansi.underline("title")))
-  println(ansi.strip(ansi.green("plain text")))
+  println: ansi.bold("hello") + " " + ansi.red("world")
+  println:
+    ansi.style: "error", [ansi.Code.bold, ansi.Code.red]
+  println:
+    ansi.bold: ansi.underline("title")
+  println:
+    ansi.strip: ansi.green("plain text")
 ```
 
 - Text styles: `bold`, `dim`, `italic`, `underline`, `blink`, `inverse`, `hidden`,
@@ -85,6 +88,8 @@ on pushes to `main` and pull requests.
 
 Download packages and sources from [GitHub Releases](https://github.com/liufengyun/ansi/releases).
 New releases become available to `jo lock` after the Jo registry indexes them.
+See [CHANGELOG.md](CHANGELOG.md) for version history and
+[RELEASE.md](RELEASE.md) for the maintainer release process.
 
 ## License
 

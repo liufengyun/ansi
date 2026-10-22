@@ -8,14 +8,16 @@
   ! ```
   ! import ansi
   !
-  ! println (ansi.bold("hello") + " " + ansi.red("world"))
-  ! println (ansi.style("error", [ansi.Code.bold, ansi.Code.red]))
+  ! println: ansi.bold("hello") + " " + ansi.red("world")
+  ! println:
+  !   ansi.style: "error", [ansi.Code.bold, ansi.Code.red]
   ! ```
   !
   ! Styles are composable by nesting:
   !
   ! ```
-  ! println (ansi.bold(ansi.underline("title")))
+  ! println:
+  !   ansi.bold: ansi.underline("title")
   ! ```
   !
   ! When the terminal does not support color, use `ansi.strip` to remove all
